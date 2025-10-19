@@ -217,14 +217,14 @@ class Simple_Property_Filter {
             'simple-property-filter-style', 
             get_stylesheet_directory_uri() . '/assets/frontend/css/property-filter.css',
             array(),
-            '1.0.0'
+            '1.0.1'
         );
 
         wp_enqueue_script( 
             'simple-property-filter-script', 
             get_stylesheet_directory_uri() . '/assets/frontend/js/property-filter.js',
             array( 'jquery' ),
-            '1.0.0',
+            '1.0.1',
             true 
         );
     }
