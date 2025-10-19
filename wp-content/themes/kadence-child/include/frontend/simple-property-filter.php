@@ -31,11 +31,11 @@ class Simple_Property_Filter {
 <div class="property-filter-container">
     <div class="filter-tabs">
         <button
-            class="tab-link <?php echo ( !isset($_GET['property_for']) || $_GET['property_for'] == 'rent' ) ? 'active' : ''; ?>"
-            data-filter-type="rent">Rent</button>
-        <button
             class="tab-link <?php echo ( isset($_GET['property_for']) && $_GET['property_for'] == 'buy' ) ? 'active' : ''; ?>"
             data-filter-type="buy">Buy</button>
+        <button
+            class="tab-link <?php echo ( !isset($_GET['property_for']) || $_GET['property_for'] == 'rent' ) ? 'active' : ''; ?>"
+            data-filter-type="rent">Rent</button>
     </div>
 
     <div class="filter-form-wrapper">
