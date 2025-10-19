@@ -430,8 +430,10 @@
 /* --- Responsive Design --- */
 @media (max-width: 768px) {
   .property-filter-container {
-    margin: 20px 10px;
     padding: 15px 20px;
+    box-shadow: 0 223px 62px 0 rgba(0, 0, 0, 0),
+      0 143px 57px 0 rgba(0, 0, 0, 0.01), 0 80px 48px 0 rgba(0, 0, 0, 0.05),
+      0 36px 36px 0 rgba(0, 0, 0, 0.09), 0 9px 20px 0 rgba(0, 0, 0, 0.1);
   }
 
   #property-filter-form {
@@ -439,9 +441,27 @@
     align-items: stretch;
   }
 
+  .form-field label {
+    font-size: 14px;
+  }
+
+  .form-field input[type="text"],
+  .form-field select {
+    font-size: 12px;
+  }
+
   .form-field {
     min-width: 100%;
-    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-right: none;
+  }
+
+  .filter-form-wrapper {
+    padding: 10px;
+  }
+
+  .location-field {
+    border-bottom: 1px solid #e0def7;
   }
 
   .submit-field {
@@ -449,18 +469,16 @@
   }
 
   .search-button {
-    width: 100%;
-    padding: 15px 30px;
+    padding: 0px 30px;
   }
 
   .tab-link {
     font-size: 14px;
-    margin-right: 20px;
   }
 
   /* Mobile responsive for custom select */
   .custom-select-trigger {
-    font-size: 16px;
+    font-size: 12px;
   }
 
   .custom-select-options {
@@ -469,7 +487,7 @@
 
   .custom-select-option {
     padding: 12px 16px;
-    font-size: 15px;
+    font-size: 12px;
   }
 
   .custom-select-option:hover {
