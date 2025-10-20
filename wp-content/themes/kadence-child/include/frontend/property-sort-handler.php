@@ -418,4 +418,3 @@ class Property_Sort_Handler {
 
 // Initialize the Property Sort Handler
 new Property_Sort_Handler();
-new Property_Sort_Handler();

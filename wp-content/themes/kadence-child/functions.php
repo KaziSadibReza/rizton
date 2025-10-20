@@ -64,6 +64,11 @@ require_once get_stylesheet_directory() . '/include/frontend/property-filter.php
  */
 require_once get_stylesheet_directory() . '/include/frontend/frontend-assets-handler.php';
 
+/**
+ * Include Page Preloader
+ */
+require_once get_stylesheet_directory() . '/include/frontend/page-preloader.php';
+
 
 
 

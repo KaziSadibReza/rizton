@@ -250,6 +250,84 @@
   background-color: #f3f4f6;
 }
 
+/* Rizton Preloader Styles for Sorting */
+#rizton-preloader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #0a1931;
+  z-index: 99999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.75s ease-in-out, visibility 0.75s ease-in-out;
+  opacity: 1;
+  visibility: visible;
+}
+
+#rizton-preloader.loaded {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.rizton-logo-container {
+  position: relative;
+  width: 100px;
+  height: 110px;
+}
+
+.rizton-logo-container svg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.rizton-logo-draw-path {
+  fill: none; 
+  fill-opacity: 0;
+  stroke: #3b82f6;
+  stroke-width: 1;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  transform-origin: center;
+  animation: 
+    rizton-draw 2s ease-in-out forwards,
+    rizton-fillAndScale 0.5s ease-in-out 2s forwards;
+}
+
+@keyframes rizton-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes rizton-fillAndScale {
+  to {
+    fill-opacity: 1;
+    fill: #1E57DF;
+    transform: scale(1.05);
+  }
+}
+
+/* Hide/dim content during sorting */
+body.rizton-sorting {
+  overflow: hidden;
+}
+
+body.rizton-sorting .site-main,
+body.rizton-sorting .site-content,
+body.rizton-sorting #main,
+body.rizton-sorting #content,
+body.rizton-sorting .elementor-section {
+  opacity: 0.2;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
 /* Mobile responsive design */
 @media (max-width: 768px) {
   .property-sort-widget {

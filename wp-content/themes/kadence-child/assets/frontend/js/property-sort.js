@@ -1,69 +1,132 @@
 jQuery(document).ready(function ($) {
-  // Initialize custom dropdown for property sort
+  // --- PRELOADER SETUP ---
+  const preloaderHTML = `
+    <div class="widget-ajax-preloader">
+      <div class="logo-container">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="44" viewBox="0 0 40 44" fill="none" overflow="visible">
+          <path class="logo-draw-path" d="M39.2665 13.0801V43.269H20.6012L13.1324 34.9501C11.698 33.3543 11.0745 31.1351 11.6544 29.0684C11.7721 28.6542 11.9291 28.2487 12.134 27.8607C13.2458 25.7373 15.7659 23.6183 21.386 23.6183L23.4221 36.1753C27.368 34.017 30.8735 31.3574 31.0043 25.8507C30.9781 20.9369 29.391 18.6392 26.4349 16.7644C24.438 15.4999 22.0836 14.9026 19.7117 14.9026H8.94245V43.269H0V13.0801L19.6333 0L39.2665 13.0801Z"/>
+        </svg>
+      </div>
+    </div>`;
+
+  // Inject preloader styles into the page head dynamically
+  function addPreloaderStyles() {
+    const styles = `
+      .elementor-element-ff2254e {
+        position: relative; /* Essential for overlay positioning */
+        transition: min-height 0.3s ease-in-out;
+      }
+      .widget-ajax-preloader {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 10;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        border-radius: 8px;
+      }
+      .elementor-element-ff2254e.loading-active .widget-ajax-preloader {
+        opacity: 1;
+        visibility: visible;
+      }
+      .widget-ajax-preloader .logo-container { width: 100px; height: 110px; }
+      .widget-ajax-preloader .logo-container svg { width: 100%; height: 100%; }
+      .widget-ajax-preloader .logo-draw-path {
+        fill: none; fill-opacity: 0; stroke: #3b82f6; stroke-width: 1;
+        transform-origin: center;
+        animation: draw 2s ease-in-out forwards, fillAndScale 0.5s ease-in-out 2s forwards;
+      }
+      @keyframes draw { to { stroke-dashoffset: 0; } }
+      @keyframes fillAndScale { to { fill-opacity: 1; fill: #1E57DF; transform: scale(1.05); } }
+    `;
+    if (!$("#widget-preloader-styles").length) {
+      $("head").append(
+        '<style id="widget-preloader-styles">' + styles + "</style>"
+      );
+    }
+  }
+
+  // Show/Hide Functions for the Preloader
+  function showWidgetPreloader() {
+    const $widget = $(".elementor-element-ff2254e");
+    if ($widget.length) {
+      const currentHeight = $widget.find(".elementor-loop-container").height();
+      $widget
+        .find(".elementor-loop-container")
+        .css("min-height", currentHeight);
+      $widget.addClass("loading-active").prepend(preloaderHTML);
+      const logoPath = $widget.find(".logo-draw-path")[0];
+      if (logoPath) {
+        const length = logoPath.getTotalLength();
+        logoPath.style.strokeDasharray = length;
+        logoPath.style.strokeDashoffset = length;
+      }
+    }
+  }
+
+  function hideWidgetPreloader() {
+    const $widget = $(".elementor-element-ff2254e");
+    if ($widget.length) {
+      $widget.find(".widget-ajax-preloader").fadeOut(300, function () {
+        $(this).remove();
+        $widget.removeClass("loading-active");
+        $widget.find(".elementor-loop-container").css("min-height", "");
+      });
+    }
+  }
+
   initializeCustomSelect();
+  addPreloaderStyles();
 
   function initializeCustomSelect() {
-    // Convert existing select elements to custom selects
     $(".property-sort-widget select").each(function () {
       const $select = $(this);
-      const $widget = $select.closest(".property-sort-widget");
+      if (
+        $select
+          .closest(".property-sort-widget")
+          .find(".property-sort-select-wrapper").length
+      )
+        return;
 
-      // Skip if already converted
-      if ($widget.find(".property-sort-select-wrapper").length) return;
-
-      // Create custom select wrapper
       const $wrapper = $('<div class="property-sort-select-wrapper"></div>');
       const $customSelect = $(
         '<div class="property-sort-select-custom"></div>'
       );
-
-      // Get current value and text
       const currentValue = $select.val();
       const currentText = currentValue
         ? $select.find("option:selected").text()
         : $select.find("option:first").text();
-
-      // Create trigger
-      const $trigger = $(`
-        <div class="property-sort-select-trigger ${
+      const $trigger = $(
+        `<div class="property-sort-select-trigger ${
           currentValue ? "has-value" : ""
-        }">
-          <span class="property-sort-select-text">${currentText}</span>
-        </div>
-      `);
-
-      // Create options container
+        }"><span class="property-sort-select-text">${currentText}</span></div>`
+      );
       const $optionsContainer = $(
         '<div class="property-sort-select-options"></div>'
       );
 
-      // Add options
       $select.find("option").each(function () {
         const $option = $(this);
         const value = $option.val();
         const text = $option.text();
-        const isSelected = $option.is(":selected") || currentValue === value;
-
-        const $customOption = $(`
-          <div class="property-sort-select-option ${
-            isSelected ? "selected" : ""
-          }" data-value="${value}">
-            ${text}
-          </div>
-        `);
-
+        const $customOption = $(
+          `<div class="property-sort-select-option" data-value="${value}">${text}</div>`
+        );
         $optionsContainer.append($customOption);
       });
 
-      // Assemble custom select
       $customSelect.append($trigger).append($optionsContainer);
       $wrapper.append($customSelect);
-
-      // Hide original select and add custom select
-      $select.hide();
-      $select.after($wrapper);
-
-      // Add event handlers
+      $select.hide().after($wrapper);
       setupCustomSelectEvents($customSelect, $select);
     });
   }
@@ -73,395 +136,120 @@ jQuery(document).ready(function ($) {
     const $options = $customSelect.find(".property-sort-select-option");
     const $text = $customSelect.find(".property-sort-select-text");
 
-    // Toggle dropdown
     $trigger.on("click", function (e) {
-      e.preventDefault();
       e.stopPropagation();
-
-      // Close other dropdowns
       $(".property-sort-select-custom.active")
         .not($customSelect)
         .removeClass("active");
-
-      // Toggle this dropdown
       $customSelect.toggleClass("active");
     });
 
-    // Option selection
     $options.on("click", function (e) {
-      e.preventDefault();
       e.stopPropagation();
-
       const $option = $(this);
       const value = $option.data("value");
       const text = $option.text();
 
-      // Update custom select appearance
       $options.removeClass("selected");
       $option.addClass("selected");
       $text.text(text);
+      $trigger.toggleClass("has-value", !!value);
 
-      // Update trigger class
-      if (value) {
-        $trigger.addClass("has-value");
-      } else {
-        $trigger.removeClass("has-value");
-      }
-
-      // Update original select
       $originalSelect.val(value).trigger("change");
-
-      // Handle sort change with AJAX
       handleAjaxSort(value);
-
-      // Close dropdown
       $customSelect.removeClass("active");
     });
 
-    // Close dropdown when clicking outside
-    $(document).on("click", function (e) {
-      if (
-        !$customSelect.is(e.target) &&
-        $customSelect.has(e.target).length === 0
-      ) {
-        $customSelect.removeClass("active");
-      }
+    $(document).on("click", () => $customSelect.removeClass("active"));
+    $(document).on("keydown", (e) => {
+      if (e.key === "Escape") $customSelect.removeClass("active");
     });
-
-    // Close dropdown on escape key
-    $(document).on("keydown", function (e) {
-      if (e.key === "Escape") {
-        $customSelect.removeClass("active");
-      }
-    });
-
-    // Make the custom select focusable
-    $customSelect.attr("tabindex", "0");
   }
 
-  // AJAX sort handling function
+  // --- REVISED AJAX HANDLING FUNCTION (NO PHP CHANGE REQUIRED) ---
   function handleAjaxSort(sortValue) {
-    // Get current URL parameters to preserve existing filters
-    const currentParams = window.location.search.substring(1);
+    showWidgetPreloader();
 
-    // Prepare AJAX data
-    const ajaxData = {
-      action: "ajax_property_sort",
-      sort_by: sortValue,
-      current_params: currentParams,
-      paged: 1, // Reset to first page when sorting
-      nonce: getAjaxNonce(),
-    };
-
-    // console.log("Making AJAX request with data:", ajaxData);
-
-    // Make AJAX request
+    // This AJAX call validates the request, but we won't use its response to update content.
+    // It's kept here in case your PHP has other functions tied to this action hook.
     $.ajax({
       url: getAjaxUrl(),
       type: "POST",
-      data: ajaxData,
+      data: {
+        action: "ajax_property_sort",
+        sort_by: sortValue,
+        nonce: getAjaxNonce(),
+      },
       dataType: "json",
-      success: function (response) {
-        // console.log("AJAX Success Response:", response);
-        if (response.success) {
-          // Update URL with new sort parameter
-          updateUrlWithoutReload(sortValue);
+      success: function (initialResponse) {
+        if (initialResponse.success) {
+          // The request was valid. Now we fetch the new page content via a partial reload.
+          const newUrl = updateUrlWithoutReload(sortValue); // Update URL and get the new one
 
-          // Try to refresh Elementor widget content
-          refreshElementorWidget();
+          // Use $.get to fetch the full HTML of the page with the new sort parameter
+          $.get(newUrl)
+            .done(function (data) {
+              // Find the new content within the fetched HTML
+              const $newContent = $(data);
+              const $newLoopContainer = $newContent.find(
+                ".elementor-element-ff2254e .elementor-loop-container"
+              );
+
+              if ($newLoopContainer.length) {
+                // Replace the old content with the new content
+                findPropertiesContainer().html($newLoopContainer.html());
+              } else {
+                // If the container isn't found, reload the whole page as a fallback
+                window.location.href = newUrl;
+                return;
+              }
+              hideWidgetPreloader(); // Hide the preloader after content is successfully replaced
+            })
+            .fail(function () {
+              // If the fetch fails, just reload the page to show the sorted content
+              window.location.href = newUrl;
+            });
         } else {
-          console.error("AJAX request failed - Invalid response:", response);
-          showErrorMessage("Failed to sort properties. Please try again.");
+          // The initial AJAX validation from your PHP failed
+          console.error("AJAX validation failed.", initialResponse);
+          showErrorMessage("Sorting request was not valid.");
+          hideWidgetPreloader();
         }
       },
       error: function (xhr, status, error) {
-        console.error("AJAX error:", {
-          status,
-          error,
-          response: xhr.responseText,
-        });
-        showErrorMessage("Failed to sort properties. Please try again.");
+        console.error("AJAX request failed:", { status, error });
+        showErrorMessage("An error occurred while trying to sort.");
+        hideWidgetPreloader();
       },
     });
   }
 
-  // Find the properties container (this should match your Elementor loop container)
+  // Utility functions
   function findPropertiesContainer() {
-    // Try different possible selectors for the properties container
-    const selectors = [
-      ".elementor-widget-loop-grid .elementor-loop-container",
-      ".elementor-loop-container",
-      ".property-loop-container",
-      ".properties-grid",
-      ".property-cards-container",
-      '[data-widget_type="loop-grid.default"] .elementor-loop-container',
-    ];
-
-    for (let selector of selectors) {
-      const $container = $(selector);
-      if ($container.length > 0) {
-        return $container;
-      }
-    }
-
-    // Fallback: return first element that might contain properties
-    return $(".elementor-widget-container").first();
+    return $(".elementor-element-ff2254e .elementor-loop-container");
   }
 
-  // Update properties container with new content
-  function updatePropertiesContainer(html) {
-    const $container = findPropertiesContainer();
-    if ($container.length) {
-      $container.html(html);
-    }
-  }
-
-  // Update pagination (if you have pagination)
-  function updatePagination(maxPages, currentPage) {
-    // This is optional - implement if you have pagination
-    // You would need to identify your pagination container and update it
-  }
-
-  // Update URL without page reload
+  // This function now returns the new URL so we can use it for the $.get request
   function updateUrlWithoutReload(sortValue) {
     const urlParams = new URLSearchParams(window.location.search);
-
     if (sortValue) {
       urlParams.set("sort_by", sortValue);
     } else {
       urlParams.delete("sort_by");
     }
-
-    const newUrl = window.location.pathname + "?" + urlParams.toString();
-
-    // Update browser history without reloading
-    if (history.pushState) {
-      history.pushState({}, "", newUrl);
-    }
+    urlParams.delete("paged"); // Always reset to first page on sort
+    const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+    history.pushState({ path: newUrl }, "", newUrl);
+    return newUrl; // Return the newly constructed URL
   }
 
-  // Update results count (if you have a results counter)
-  function updateResultsCount(count) {
-    const $counter = $(".results-count, .properties-count");
-    if ($counter.length) {
-      $counter.text(count + " properties found");
-    }
-  }
-
-  // Scroll to results after sorting
-  function scrollToResults() {
-    const $container = findPropertiesContainer();
-    if ($container.length) {
-      $("html, body").animate(
-        {
-          scrollTop: $container.offset().top - 100,
-        },
-        500
-      );
-    }
-  }
-
-  // Show error message to user
   function showErrorMessage(message) {
-    const $propertiesContainer = findPropertiesContainer();
-    if ($propertiesContainer.length) {
-      // Remove any existing error messages
-      $propertiesContainer.find(".properties-error-message").remove();
-
-      // Add error message
-      $propertiesContainer.prepend(
-        '<div class="properties-error-message" style="background: #f8d7da; color: #721c24; padding: 15px; margin-bottom: 20px; border: 1px solid #f5c6cb; border-radius: 4px;">' +
-          "<strong>Error:</strong> " +
-          message +
-          "</div>"
-      );
-
-      // Auto-hide after 5 seconds
-      setTimeout(function () {
-        $propertiesContainer.find(".properties-error-message").fadeOut();
-      }, 5000);
-    } else {
-      // Fallback to browser alert if container not found
-      alert(message);
-    }
+    alert(message);
   }
-
-  // Refresh Elementor widget content using proper Elementor hooks
-  function refreshElementorWidget() {
-    // console.log("Attempting to refresh Elementor widget using hooks...");
-
-    // Method 1: Use Elementor's built-in refresh system
-    if (typeof elementorFrontend !== "undefined") {
-      // Find the loop widget containers
-      const $loopWidgets = $('[data-elementor-query-id="6969"]');
-      const $postsContainers = $(
-        ".elementor-posts-container, .elementor-posts, .e-loop-container, .elementor-loop-container"
-      );
-
-      // Method A: Try to refresh the specific loop widget
-      if ($loopWidgets.length) {
-        // console.log("Found loop widget, using Elementor hooks...");
-
-        $loopWidgets.each(function () {
-          const $widget = $(this).closest(".elementor-widget");
-          const widgetType = $widget.attr("data-widget_type") || "loop-grid";
-
-          try {
-            // Trigger Elementor's widget refresh hooks
-            if (elementorFrontend.hooks) {
-              // Trigger the specific widget type hook
-              elementorFrontend.hooks.doAction(
-                "frontend/element_ready/" + widgetType,
-                $widget,
-                $
-              );
-              // console.log("Triggered hook for widget type:", widgetType);
-            }
-
-            // Use runReadyTrigger for reinitialization
-            if (
-              elementorFrontend.elementsHandler &&
-              elementorFrontend.elementsHandler.runReadyTrigger
-            ) {
-              elementorFrontend.elementsHandler.runReadyTrigger($widget[0]);
-              // console.log("Triggered runReadyTrigger for widget");
-            }
-          } catch (error) {
-            // console.log("Elementor hook error:", error);
-          }
-        });
-
-        // Trigger custom refresh events that some widgets might listen to
-        $loopWidgets.trigger("elementor:widget:refresh");
-        $loopWidgets.trigger("elementor:loop:refresh");
-      }
-
-      // Method B: Try to refresh posts containers directly
-      else if ($postsContainers.length) {
-        // console.log("Found posts containers, triggering refresh...");
-
-        $postsContainers.each(function () {
-          const $container = $(this);
-          const $widget = $container.closest(".elementor-widget");
-          const widgetType = $widget.attr("data-widget_type") || "posts";
-
-          try {
-            if (elementorFrontend.hooks) {
-              elementorFrontend.hooks.doAction(
-                "frontend/element_ready/" + widgetType,
-                $widget,
-                $
-              );
-            }
-
-            if (
-              elementorFrontend.elementsHandler &&
-              elementorFrontend.elementsHandler.runReadyTrigger
-            ) {
-              elementorFrontend.elementsHandler.runReadyTrigger($widget[0]);
-            }
-          } catch (error) {
-            // console.log("Posts container hook error:", error);
-          }
-        });
-
-        // Trigger specific posts refresh events
-        $postsContainers.trigger("elementor:posts:refresh");
-        $postsContainers.trigger("posts:refresh");
-      }
-
-      // Method C: Global Elementor refresh triggers
-      try {
-        // Trigger global refresh events
-        $(document).trigger("elementor:refresh");
-        $(window).trigger("elementor:loaded");
-
-        // Force a resize event which many widgets respond to
-        $(window).trigger("resize");
-
-        // console.log("Triggered global Elementor refresh events");
-      } catch (error) {
-        // console.log("Global refresh error:", error);
-      }
-    } else {
-      // console.log("elementorFrontend not available");
-    }
-
-    // If the hooks don't work, fall back to the partial reload method
-    setTimeout(function () {
-      // Check if the content actually changed
-      const currentUrl = window.location.href;
-
-      // Give hooks time to work, then check if we need fallback
-      // console.log("Checking if hooks worked, fallback if needed...");
-
-      // If hooks didn't work, use the working partial reload method
-      fallbackToPartialReload(currentUrl);
-    }, 1000); // Give hooks 1 second to work
-
-    // console.log("Widget refresh attempt using hooks completed");
-  }
-
-  // Fallback method using partial page reload (our working solution)
-  function fallbackToPartialReload(currentUrl) {
-    // console.log("Using fallback partial reload method...");
-
-    $.get(currentUrl)
-      .done(function (data) {
-        const $newContent = $(data);
-        const $currentPosts = $(
-          ".elementor-posts-container, .elementor-posts, .e-loop-container, .elementor-loop-container"
-        );
-        const $newPosts = $newContent.find(
-          ".elementor-posts-container, .elementor-posts, .e-loop-container, .elementor-loop-container"
-        );
-
-        if ($currentPosts.length && $newPosts.length) {
-          // console.log("Fallback: Replacing posts container content");
-          $currentPosts.first().replaceWith($newPosts.first());
-
-          // Reinitialize Elementor on new content
-          if (
-            typeof elementorFrontend !== "undefined" &&
-            elementorFrontend.elementsHandler
-          ) {
-            const newWidgetElement = $(
-              ".elementor-posts-container, .elementor-posts, .e-loop-container, .elementor-loop-container"
-            ).closest(".elementor-widget")[0];
-            if (newWidgetElement) {
-              elementorFrontend.elementsHandler.runReadyTrigger(
-                newWidgetElement
-              );
-            }
-          }
-
-          // console.log("Fallback method successful");
-        }
-      })
-      .fail(function () {
-        // console.log("Fallback method also failed");
-      });
-  }
-
-  // Get AJAX URL
   function getAjaxUrl() {
-    // Try to get from localized script first
-    if (typeof ajax_object !== "undefined" && ajax_object.ajax_url) {
-      return ajax_object.ajax_url;
-    }
-
-    // Fallback to WordPress AJAX URL
-    return "/wp-admin/admin-ajax.php";
+    return window.ajax_object?.ajax_url || "/wp-admin/admin-ajax.php";
   }
-
-  // Get AJAX nonce
   function getAjaxNonce() {
-    // Try to get from localized script first
-    if (typeof ajax_object !== "undefined" && ajax_object.nonce) {
-      return ajax_object.nonce;
-    }
-
-    // Fallback nonce
-    return "property_sort_nonce";
+    return window.ajax_object?.nonce || "default_nonce";
   }
 });
