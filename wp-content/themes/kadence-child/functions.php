@@ -54,6 +54,11 @@ require_once get_stylesheet_directory() . '/include/frontend/property-agents-fro
  */
 require_once get_stylesheet_directory() . '/include/frontend/simple-property-filter.php';
 
+/**
+ * Include AJAX Property Sort Widget (Separate from filter)
+ */
+require_once get_stylesheet_directory() . '/include/frontend/ajax-property-sort.php';
+
 
 
 
