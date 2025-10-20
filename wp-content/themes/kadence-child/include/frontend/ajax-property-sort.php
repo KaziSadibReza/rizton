@@ -84,8 +84,9 @@ class AJAX_Property_Sort_Widget {
             'paged' => 1,
         );
 
-        // Apply existing filters from URL
+        // Apply existing filters from URL (only if they exist)
         $meta_query = array( 'relation' => 'AND' );
+        $has_filters = false;
         
         if ( ! empty( $url_filters['property_for'] ) ) {
             $meta_query[] = array(
@@ -93,6 +94,7 @@ class AJAX_Property_Sort_Widget {
                 'value' => sanitize_text_field( $url_filters['property_for'] ),
                 'compare' => 'LIKE'
             );
+            $has_filters = true;
         }
 
         if ( ! empty( $url_filters['property_type'] ) ) {
@@ -101,6 +103,7 @@ class AJAX_Property_Sort_Widget {
                 'value' => sanitize_text_field( $url_filters['property_type'] ),
                 'compare' => 'LIKE'
             );
+            $has_filters = true;
         }
 
         if ( ! empty( $url_filters['location'] ) ) {
@@ -118,9 +121,11 @@ class AJAX_Property_Sort_Widget {
                     'compare' => 'LIKE'
                 )
             );
+            $has_filters = true;
         }
 
-        if ( count( $meta_query ) > 1 ) {
+        // Only apply meta query if we actually have filters
+        if ( $has_filters ) {
             $query_args['meta_query'] = $meta_query;
         }
 
