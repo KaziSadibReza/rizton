@@ -80,7 +80,7 @@ class AJAX_Property_Sort_Widget {
         $query_args = array(
             'post_type' => 'property',
             'post_status' => 'publish',
-            'posts_per_page' => 12, // Adjust as needed
+            'posts_per_page' => -1, // Get all posts first, then we can add pagination later
             'paged' => 1,
         );
 
@@ -169,7 +169,12 @@ class AJAX_Property_Sort_Widget {
             'success' => true,
             'data' => array(
                 'html' => '',
-                'found_posts' => $query->found_posts
+                'found_posts' => $query->found_posts,
+                'debug' => array(
+                    'sort_type' => $sort_type,
+                    'query_args' => $query_args,
+                    'post_count' => $query->post_count
+                )
             )
         );
 
@@ -179,21 +184,16 @@ class AJAX_Property_Sort_Widget {
             while ( $query->have_posts() ) {
                 $query->the_post();
                 
-                // Get the Elementor loop item template
+                // Use simple fallback template for now to ensure it works
                 echo '<div class="elementor-post elementor-grid-item">';
-                
-                // This will use whatever template is configured in your Elementor loop
-                if ( function_exists( 'elementor_theme_do_location' ) ) {
-                    elementor_theme_do_location( 'archive' );
-                } else {
-                    // Fallback simple template
-                    $this->render_simple_property_item();
-                }
-                
+                $this->render_simple_property_item();
                 echo '</div>';
             }
             wp_reset_postdata();
             $response['data']['html'] = ob_get_clean();
+        } else {
+            // Add debug info when no posts found
+            $response['data']['debug']['message'] = 'No posts found with current query';
         }
 
         wp_send_json( $response );
@@ -209,8 +209,9 @@ class AJAX_Property_Sort_Widget {
         
         switch ( $sort_type ) {
             case 'date_published':
+            case 'date_oldest':
                 $query_args['orderby'] = 'date';
-                $query_args['order'] = 'DESC';
+                $query_args['order'] = ( $sort_type === 'date_oldest' ) ? 'ASC' : 'DESC';
                 break;
                 
             case 'price_low_high':
@@ -219,6 +220,10 @@ class AJAX_Property_Sort_Widget {
                     $query_args['orderby'] = 'meta_value_num';
                     $query_args['meta_key'] = $price_field;
                     $query_args['order'] = 'ASC';
+                } else {
+                    // Fallback to date if no price field found
+                    $query_args['orderby'] = 'date';
+                    $query_args['order'] = 'DESC';
                 }
                 break;
                 
@@ -227,6 +232,10 @@ class AJAX_Property_Sort_Widget {
                 if ( $price_field ) {
                     $query_args['orderby'] = 'meta_value_num';
                     $query_args['meta_key'] = $price_field;
+                    $query_args['order'] = 'DESC';
+                } else {
+                    // Fallback to date if no price field found
+                    $query_args['orderby'] = 'date';
                     $query_args['order'] = 'DESC';
                 }
                 break;
@@ -405,7 +414,9 @@ class AJAX_Property_Sort_Widget {
      */
     private function get_sort_options() {
         return array(
-            'date_published' => 'Date Published',
+            '' => 'Select Sort Option',
+            'date_published' => 'Date Published (Newest)',
+            'date_oldest' => 'Date Published (Oldest)',
             'price_low_high' => 'Price (Low-High)',
             'price_high_low' => 'Price (High-Low)',
             'suburb_a_z' => 'Suburb (A-Z)',

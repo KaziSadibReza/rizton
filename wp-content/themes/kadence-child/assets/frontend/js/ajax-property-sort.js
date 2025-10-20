@@ -44,8 +44,11 @@ jQuery(document).ready(function ($) {
     // Handle sort dropdown change
     $sortDropdown.on("change", function () {
       const selectedSort = $(this).val();
-      if (selectedSort) {
+      if (selectedSort && selectedSort !== "") {
         performAjaxSort(selectedSort);
+      } else {
+        // If empty option selected, reload original results
+        performAjaxSort("date_published");
       }
     });
 
@@ -73,6 +76,7 @@ jQuery(document).ready(function ($) {
         timeout: 10000,
         
         success: function (response) {
+          console.log("AJAX Sort Response:", response); // Debug log
           if (response.success && response.data) {
             // Replace content
             $propertiesContainer.html(response.data.html);
@@ -88,7 +92,14 @@ jQuery(document).ready(function ($) {
               scrollTop: $propertiesContainer.offset().top - 100
             }, 500);
             
+            // Debug info
+            console.log("Found posts:", response.data.found_posts);
+            if (response.data.debug) {
+              console.log("Debug info:", response.data.debug);
+            }
+            
           } else {
+            console.error("Invalid response:", response);
             showErrorMessage("Failed to sort properties. Please try again.");
           }
         },
