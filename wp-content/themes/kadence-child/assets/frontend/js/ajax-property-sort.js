@@ -63,11 +63,10 @@ jQuery(document).ready(function ($) {
         action: "property_sort_ajax",
         nonce: ajaxPropertySort.nonce,
         sort_type: sortType,
-        query_id: queryId,
         url_filters: JSON.stringify(urlFilters),
       };
 
-      // Perform AJAX request
+      // Perform AJAX request to get redirect URL
       $.ajax({
         url: ajaxPropertySort.ajax_url,
         type: "POST",
@@ -77,27 +76,9 @@ jQuery(document).ready(function ($) {
         
         success: function (response) {
           console.log("AJAX Sort Response:", response); // Debug log
-          if (response.success && response.data) {
-            // Replace content
-            $propertiesContainer.html(response.data.html);
-            
-            // Update URL for bookmarking
-            updateUrlWithSort(sortType);
-            
-            // Trigger custom event
-            $(document).trigger("ajaxPropertySortComplete", [response.data, sortType]);
-            
-            // Scroll to results
-            $("html, body").animate({
-              scrollTop: $propertiesContainer.offset().top - 100
-            }, 500);
-            
-            // Debug info
-            console.log("Found posts:", response.data.found_posts);
-            if (response.data.debug) {
-              console.log("Debug info:", response.data.debug);
-            }
-            
+          if (response.success && response.data && response.data.redirect_url) {
+            // Redirect to the new URL - this will let Elementor handle the query and template
+            window.location.href = response.data.redirect_url;
           } else {
             console.error("Invalid response:", response);
             showErrorMessage("Failed to sort properties. Please try again.");

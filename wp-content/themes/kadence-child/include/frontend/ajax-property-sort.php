@@ -17,6 +17,9 @@ class AJAX_Property_Sort_Widget {
         add_action( 'wp_ajax_property_sort_ajax', array( $this, 'handle_ajax_sort' ) );
         add_action( 'wp_ajax_nopriv_property_sort_ajax', array( $this, 'handle_ajax_sort' ) );
         
+        // Hook into Elementor query for sorting
+        add_action( 'elementor/query/6969', array( $this, 'modify_elementor_query' ), 10, 2 );
+        
         // Enqueue scripts and styles
         add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
     }
@@ -59,7 +62,31 @@ class AJAX_Property_Sort_Widget {
     }
 
     /**
-     * Handle AJAX sort request
+     * Modify Elementor query based on sort parameters
+     */
+    public function modify_elementor_query( $query, $widget ) {
+        // Check if we have a sort parameter
+        $sort_by = isset( $_GET['sort_by'] ) ? sanitize_text_field( $_GET['sort_by'] ) : '';
+        
+        if ( ! empty( $sort_by ) ) {
+            $query_args = array();
+            $this->apply_sort_to_query_args( $query_args, $sort_by );
+            
+            // Apply the sorting to Elementor query
+            if ( isset( $query_args['orderby'] ) ) {
+                $query->set( 'orderby', $query_args['orderby'] );
+            }
+            if ( isset( $query_args['order'] ) ) {
+                $query->set( 'order', $query_args['order'] );
+            }
+            if ( isset( $query_args['meta_key'] ) ) {
+                $query->set( 'meta_key', $query_args['meta_key'] );
+            }
+        }
+    }
+
+    /**
+     * Handle AJAX sort request - now returns redirect URL instead of HTML
      */
     public function handle_ajax_sort() {
         // Security check
@@ -68,140 +95,50 @@ class AJAX_Property_Sort_Widget {
         }
 
         $sort_type = sanitize_text_field( $_POST['sort_type'] ?? '' );
-        $query_id = sanitize_text_field( $_POST['query_id'] ?? '6969' );
-
+        
         // Get current URL filters to maintain them
         $url_filters = array();
         if ( isset( $_POST['url_filters'] ) ) {
             $url_filters = json_decode( stripslashes( $_POST['url_filters'] ), true );
         }
 
-        // Build query args
-        $query_args = array(
-            'post_type' => 'property',
-            'post_status' => 'publish',
-            'posts_per_page' => -1, // Get all posts first, then we can add pagination later
-            'paged' => 1,
-        );
-
-        // Apply existing filters from URL (only if they exist)
-        $meta_query = array( 'relation' => 'AND' );
-        $has_filters = false;
+        // Build the redirect URL with sort parameter
+        $current_url = home_url( $_SERVER['REQUEST_URI'] );
+        $url_parts = parse_url( $current_url );
+        $base_url = $url_parts['scheme'] . '://' . $url_parts['host'] . $url_parts['path'];
         
+        // Build query parameters
+        $params = array();
+        
+        // Keep existing filters
         if ( ! empty( $url_filters['property_for'] ) ) {
-            $meta_query[] = array(
-                'key' => 'property_for',
-                'value' => sanitize_text_field( $url_filters['property_for'] ),
-                'compare' => 'LIKE'
-            );
-            $has_filters = true;
+            $params['property_for'] = $url_filters['property_for'];
         }
-
         if ( ! empty( $url_filters['property_type'] ) ) {
-            $meta_query[] = array(
-                'key' => 'property_type',
-                'value' => sanitize_text_field( $url_filters['property_type'] ),
-                'compare' => 'LIKE'
-            );
-            $has_filters = true;
+            $params['property_type'] = $url_filters['property_type'];
         }
-
         if ( ! empty( $url_filters['location'] ) ) {
-            $location = sanitize_text_field( $url_filters['location'] );
-            $meta_query[] = array(
-                'relation' => 'OR',
-                array(
-                    'key' => 'what_is_the_street_address_street_address_',
-                    'value' => $location,
-                    'compare' => 'LIKE'
-                ),
-                array(
-                    'key' => 'what_is_the_street_address_city',
-                    'value' => $location,
-                    'compare' => 'LIKE'
-                )
-            );
-            $has_filters = true;
+            $params['location'] = $url_filters['location'];
+        }
+        
+        // Add sort parameter
+        if ( ! empty( $sort_type ) ) {
+            $params['sort_by'] = $sort_type;
+        }
+        
+        // Build final URL
+        $redirect_url = $base_url;
+        if ( ! empty( $params ) ) {
+            $redirect_url .= '?' . http_build_query( $params );
         }
 
-        // Only apply meta query if we actually have filters
-        if ( $has_filters ) {
-            $query_args['meta_query'] = $meta_query;
-        }
-
-        // Apply sorting with correct ACF field names
-        $this->apply_sort_to_query_args( $query_args, $sort_type );
-
-        // Execute query
-        $query = new WP_Query( $query_args );
-
-        // Custom post-processing for land size sorting if needed
-        if ( strpos( $sort_type, 'land_size' ) !== false && $query->have_posts() ) {
-            $posts = $query->posts;
-            $size_field = $this->get_existing_meta_key( array( 'land_size_sq_feet', 'property_size', 'land_size', 'size', 'area' ) );
-            
-            if ( $size_field === 'land_size_sq_feet' ) {
-                // Custom sorting for "5x7 m²" format
-                $sort_direction = ( $sort_type === 'land_size_low_high' ) ? 1 : -1;
-                
-                usort( $posts, function( $a, $b ) use ( $size_field, $sort_direction ) {
-                    $size_a = get_field( $size_field, $a->ID );
-                    $size_b = get_field( $size_field, $b->ID );
-                    
-                    $area_a = $this->extract_land_size_area( $size_a );
-                    $area_b = $this->extract_land_size_area( $size_b );
-                    
-                    // Handle cases where area calculation fails
-                    if ( $area_a == 0 && $area_b == 0 ) {
-                        return 0;
-                    } elseif ( $area_a == 0 ) {
-                        return 1; // Put zero values at the end
-                    } elseif ( $area_b == 0 ) {
-                        return -1; // Put zero values at the end
-                    }
-                    
-                    return ( $area_a <=> $area_b ) * $sort_direction;
-                });
-                
-                // Update the query posts
-                $query->posts = $posts;
-                $query->post_count = count( $posts );
-            }
-        }
-
-        // Prepare response
-        $response = array(
+        // Return the redirect URL
+        wp_send_json( array(
             'success' => true,
             'data' => array(
-                'html' => '',
-                'found_posts' => $query->found_posts,
-                'debug' => array(
-                    'sort_type' => $sort_type,
-                    'query_args' => $query_args,
-                    'post_count' => $query->post_count
-                )
+                'redirect_url' => $redirect_url
             )
-        );
-
-        // Generate HTML content
-        if ( $query->have_posts() ) {
-            ob_start();
-            while ( $query->have_posts() ) {
-                $query->the_post();
-                
-                // Use simple fallback template for now to ensure it works
-                echo '<div class="elementor-post elementor-grid-item">';
-                $this->render_simple_property_item();
-                echo '</div>';
-            }
-            wp_reset_postdata();
-            $response['data']['html'] = ob_get_clean();
-        } else {
-            // Add debug info when no posts found
-            $response['data']['debug']['message'] = 'No posts found with current query';
-        }
-
-        wp_send_json( $response );
+        ) );
     }
 
     /**
