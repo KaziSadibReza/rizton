@@ -50,14 +50,19 @@ require_once get_stylesheet_directory() . '/include/elementor/property-gallery-d
 require_once get_stylesheet_directory() . '/include/frontend/property-agents-frontend.php';
 
 /**
- * Include Simple Property Filter for Elementor
+ * Include Rizton Property Sort Handler
  */
-require_once get_stylesheet_directory() . '/include/frontend/simple-property-filter.php';
+require_once get_stylesheet_directory() . '/include/frontend/property-sort-handler.php';
 
 /**
- * Include AJAX Property Sort Widget (Separate from filter)
+ * Include Simple Property Filter for Elementor
  */
-require_once get_stylesheet_directory() . '/include/frontend/ajax-property-sort.php';
+require_once get_stylesheet_directory() . '/include/frontend/property-filter.php';
+
+/**
+ * Include Frontend Assets Handler
+ */
+require_once get_stylesheet_directory() . '/include/frontend/frontend-assets-handler.php';
 
 
 

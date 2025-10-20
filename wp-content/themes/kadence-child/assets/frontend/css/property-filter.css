@@ -9,6 +9,9 @@
 
 .filter-form-wrapper {
   background-color: #ffffff;
+  box-shadow: 0 223px 62px 0 rgba(0, 0, 0, 0),
+    0 143px 57px 0 rgba(0, 0, 0, 0.01), 0 80px 48px 0 rgba(0, 0, 0, 0.05),
+    0 36px 36px 0 rgba(0, 0, 0, 0.09), 0 9px 20px 0 rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   padding: 20px;
 }
@@ -430,10 +433,7 @@
 /* --- Responsive Design --- */
 @media (max-width: 768px) {
   .property-filter-container {
-    padding: 15px 20px;
-    box-shadow: 0 223px 62px 0 rgba(0, 0, 0, 0),
-      0 143px 57px 0 rgba(0, 0, 0, 0.01), 0 80px 48px 0 rgba(0, 0, 0, 0.05),
-      0 36px 36px 0 rgba(0, 0, 0, 0.09), 0 9px 20px 0 rgba(0, 0, 0, 0.1);
+    padding: 15px 10px;
   }
 
   #property-filter-form {
@@ -457,7 +457,7 @@
   }
 
   .filter-form-wrapper {
-    padding: 10px;
+    padding: 20px;
   }
 
   .location-field {

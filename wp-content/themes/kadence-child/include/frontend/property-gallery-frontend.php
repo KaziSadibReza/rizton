@@ -26,9 +26,12 @@ function enqueue_property_gallery_frontend_assets() {
         $should_enqueue = true;
     }
     
-    // Force enqueue if property gallery shortcode is registered (for widgets, etc.)
-    if (has_shortcode($post->post_content ?? '', 'property_gallery') || is_singular('property')) {
-        $should_enqueue = true;
+    // Check for shortcode in Elementor content (if Elementor is active)
+    if (class_exists('Elementor\Plugin') && isset($post->ID)) {
+        $elementor_data = get_post_meta($post->ID, '_elementor_data', true);
+        if (!empty($elementor_data) && strpos($elementor_data, 'property_gallery') !== false) {
+            $should_enqueue = true;
+        }
     }
     
     if ($should_enqueue) {
