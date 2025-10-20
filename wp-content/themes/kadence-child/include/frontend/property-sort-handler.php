@@ -336,14 +336,75 @@ class Property_Sort_Handler {
 
         // For Elementor loop widgets, we need to work with the widget directly
         // Return success and let JavaScript handle the widget refresh
+        
+        // Run a test query to get debug information
+        $test_query = new WP_Query( $args );
+        $debug_posts = array();
+        
+        if ( $test_query->have_posts() ) {
+            $post_count = 0;
+            while ( $test_query->have_posts() && $post_count < 5 ) {
+                $test_query->the_post();
+                $post_id = get_the_ID();
+                
+                // Get meta values for debugging
+                $debug_posts[] = array(
+                    'id' => $post_id,
+                    'title' => get_the_title(),
+                    'date' => get_the_date('Y-m-d H:i:s'),
+                    'meta_deposit' => get_post_meta( $post_id, 'lease_details_deposit', true ),
+                    'meta_city' => get_post_meta( $post_id, 'what_is_the_street_address_city', true ),
+                    'meta_property_type' => get_post_meta( $post_id, 'property_type', true ),
+                    'meta_land_size' => get_post_meta( $post_id, 'property_details_land_size_sq_feet', true ),
+                    'post_date_raw' => get_post_field( 'post_date', $post_id )
+                );
+                $post_count++;
+            }
+        }
+        wp_reset_postdata();
+        
         $response = array(
             'success' => true,
             'sort_by' => $sort_by,
-            'message' => 'Sort parameters validated'
+            'message' => 'Sort parameters validated',
+            'debug_info' => array(
+                'server_name' => $_SERVER['SERVER_NAME'] ?? 'unknown',
+                'request_method' => $_SERVER['REQUEST_METHOD'],
+                'query_args' => $args,
+                'total_posts_found' => $test_query->found_posts,
+                'posts_per_page' => $test_query->query_vars['posts_per_page'] ?? 'not set',
+                'current_params' => $preserved_params,
+                'sample_posts' => $debug_posts,
+                'meta_keys_check' => array(
+                    'lease_details_deposit_exists' => $this->check_meta_key_exists( 'lease_details_deposit' ),
+                    'city_field_exists' => $this->check_meta_key_exists( 'what_is_the_street_address_city' ),
+                    'property_type_exists' => $this->check_meta_key_exists( 'property_type' ),
+                    'land_size_exists' => $this->check_meta_key_exists( 'property_details_land_size_sq_feet' )
+                ),
+                'wp_environment' => array(
+                    'wp_version' => get_bloginfo( 'version' ),
+                    'php_version' => PHP_VERSION,
+                    'is_multisite' => is_multisite(),
+                    'current_user_id' => get_current_user_id(),
+                    'memory_limit' => ini_get( 'memory_limit' )
+                )
+            )
         );
 
         error_log('AJAX response: ' . print_r($response, true));
         wp_send_json( $response );
+    }
+    
+    /**
+     * Check if meta key exists in database
+     */
+    private function check_meta_key_exists( $meta_key ) {
+        global $wpdb;
+        $result = $wpdb->get_var( $wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_key = %s LIMIT 1",
+            $meta_key
+        ) );
+        return intval( $result ) > 0;
     }
 
 }
