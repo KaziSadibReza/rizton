@@ -153,7 +153,7 @@ jQuery(document).ready(function ($) {
       nonce: getAjaxNonce(),
     };
 
-    console.log("Making AJAX request with data:", ajaxData);
+    // console.log("Making AJAX request with data:", ajaxData);
 
     // Make AJAX request
     $.ajax({
@@ -162,7 +162,7 @@ jQuery(document).ready(function ($) {
       data: ajaxData,
       dataType: "json",
       success: function (response) {
-        console.log("AJAX Success Response:", response);
+        // console.log("AJAX Success Response:", response);
         if (response.success) {
           // Update URL with new sort parameter
           updateUrlWithoutReload(sortValue);
@@ -288,7 +288,7 @@ jQuery(document).ready(function ($) {
 
   // Refresh Elementor widget content using proper Elementor hooks
   function refreshElementorWidget() {
-    console.log("Attempting to refresh Elementor widget using hooks...");
+    // console.log("Attempting to refresh Elementor widget using hooks...");
 
     // Method 1: Use Elementor's built-in refresh system
     if (typeof elementorFrontend !== "undefined") {
@@ -300,7 +300,7 @@ jQuery(document).ready(function ($) {
 
       // Method A: Try to refresh the specific loop widget
       if ($loopWidgets.length) {
-        console.log("Found loop widget, using Elementor hooks...");
+        // console.log("Found loop widget, using Elementor hooks...");
 
         $loopWidgets.each(function () {
           const $widget = $(this).closest(".elementor-widget");
@@ -315,7 +315,7 @@ jQuery(document).ready(function ($) {
                 $widget,
                 $
               );
-              console.log("Triggered hook for widget type:", widgetType);
+              // console.log("Triggered hook for widget type:", widgetType);
             }
 
             // Use runReadyTrigger for reinitialization
@@ -324,10 +324,10 @@ jQuery(document).ready(function ($) {
               elementorFrontend.elementsHandler.runReadyTrigger
             ) {
               elementorFrontend.elementsHandler.runReadyTrigger($widget[0]);
-              console.log("Triggered runReadyTrigger for widget");
+              // console.log("Triggered runReadyTrigger for widget");
             }
           } catch (error) {
-            console.log("Elementor hook error:", error);
+            // console.log("Elementor hook error:", error);
           }
         });
 
@@ -338,7 +338,7 @@ jQuery(document).ready(function ($) {
 
       // Method B: Try to refresh posts containers directly
       else if ($postsContainers.length) {
-        console.log("Found posts containers, triggering refresh...");
+        // console.log("Found posts containers, triggering refresh...");
 
         $postsContainers.each(function () {
           const $container = $(this);
@@ -361,7 +361,7 @@ jQuery(document).ready(function ($) {
               elementorFrontend.elementsHandler.runReadyTrigger($widget[0]);
             }
           } catch (error) {
-            console.log("Posts container hook error:", error);
+            // console.log("Posts container hook error:", error);
           }
         });
 
@@ -379,12 +379,12 @@ jQuery(document).ready(function ($) {
         // Force a resize event which many widgets respond to
         $(window).trigger("resize");
 
-        console.log("Triggered global Elementor refresh events");
+        // console.log("Triggered global Elementor refresh events");
       } catch (error) {
-        console.log("Global refresh error:", error);
+        // console.log("Global refresh error:", error);
       }
     } else {
-      console.log("elementorFrontend not available");
+      // console.log("elementorFrontend not available");
     }
 
     // If the hooks don't work, fall back to the partial reload method
@@ -393,18 +393,18 @@ jQuery(document).ready(function ($) {
       const currentUrl = window.location.href;
 
       // Give hooks time to work, then check if we need fallback
-      console.log("Checking if hooks worked, fallback if needed...");
+      // console.log("Checking if hooks worked, fallback if needed...");
 
       // If hooks didn't work, use the working partial reload method
       fallbackToPartialReload(currentUrl);
     }, 1000); // Give hooks 1 second to work
 
-    console.log("Widget refresh attempt using hooks completed");
+    // console.log("Widget refresh attempt using hooks completed");
   }
 
   // Fallback method using partial page reload (our working solution)
   function fallbackToPartialReload(currentUrl) {
-    console.log("Using fallback partial reload method...");
+    // console.log("Using fallback partial reload method...");
 
     $.get(currentUrl)
       .done(function (data) {
@@ -417,7 +417,7 @@ jQuery(document).ready(function ($) {
         );
 
         if ($currentPosts.length && $newPosts.length) {
-          console.log("Fallback: Replacing posts container content");
+          // console.log("Fallback: Replacing posts container content");
           $currentPosts.first().replaceWith($newPosts.first());
 
           // Reinitialize Elementor on new content
@@ -435,11 +435,11 @@ jQuery(document).ready(function ($) {
             }
           }
 
-          console.log("Fallback method successful");
+          // console.log("Fallback method successful");
         }
       })
       .fail(function () {
-        console.log("Fallback method also failed");
+        // console.log("Fallback method also failed");
       });
   }
 

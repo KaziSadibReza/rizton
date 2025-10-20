@@ -192,17 +192,17 @@ class Property_Sort_Handler {
      */
     public function ajax_property_sort() {
         // Debug logging
-        error_log('AJAX property sort called');
-        error_log('POST data: ' . print_r($_POST, true));
+        // error_log('AJAX property sort called');
+        // error_log('POST data: ' . print_r($_POST, true));
         
         // Verify nonce for security
         if ( ! wp_verify_nonce( $_POST['nonce'], 'property_sort_nonce' ) ) {
-            error_log('Nonce verification failed');
+            // error_log('Nonce verification failed');
             wp_send_json_error( 'Security check failed' );
             return;
         }
 
-        error_log('Nonce verification passed');
+        // error_log('Nonce verification passed');
 
         $sort_by = isset( $_POST['sort_by'] ) ? sanitize_text_field( $_POST['sort_by'] ) : '';
         $paged = isset( $_POST['paged'] ) ? intval( $_POST['paged'] ) : 1;
@@ -338,6 +338,7 @@ class Property_Sort_Handler {
         // Return success and let JavaScript handle the widget refresh
         
         // Run a test query to get debug information
+        /* DEBUG CODE - COMMENTED OUT
         $test_query = new WP_Query( $args );
         $debug_posts = array();
         
@@ -362,12 +363,14 @@ class Property_Sort_Handler {
             }
         }
         wp_reset_postdata();
+        */
         
         $response = array(
             'success' => true,
             'sort_by' => $sort_by,
-            'message' => 'Sort parameters validated',
-            'debug_info' => array(
+            'message' => 'Sort parameters validated'
+            /* DEBUG INFO - COMMENTED OUT
+            ,'debug_info' => array(
                 'server_name' => $_SERVER['SERVER_NAME'] ?? 'unknown',
                 'request_method' => $_SERVER['REQUEST_METHOD'],
                 'query_args' => $args,
@@ -389,15 +392,18 @@ class Property_Sort_Handler {
                     'memory_limit' => ini_get( 'memory_limit' )
                 )
             )
+            */
         );
 
-        error_log('AJAX response: ' . print_r($response, true));
+        // error_log('AJAX response: ' . print_r($response, true));
         wp_send_json( $response );
     }
     
+    /* DEBUG FUNCTION - COMMENTED OUT
     /**
      * Check if meta key exists in database
      */
+    /*
     private function check_meta_key_exists( $meta_key ) {
         global $wpdb;
         $result = $wpdb->get_var( $wpdb->prepare(
@@ -406,8 +412,10 @@ class Property_Sort_Handler {
         ) );
         return intval( $result ) > 0;
     }
+    */
 
 }
 
 // Initialize the Property Sort Handler
+new Property_Sort_Handler();
 new Property_Sort_Handler();

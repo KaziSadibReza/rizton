@@ -13,7 +13,7 @@ class Rizton_Frontend_Assets_Handler {
 	private $theme_uri;
 
 	public function __construct() {
-		$this->version = '1.2.0';
+		$this->version = '1.2.1';
 		$this->theme_uri = get_stylesheet_directory_uri();
 		
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
