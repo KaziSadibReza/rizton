@@ -258,7 +258,7 @@
   width: 100%;
   height: 100%;
   background-color: #0a1931;
-  z-index: 99999;
+  z-index: 9999999;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -287,15 +287,14 @@
 }
 
 .rizton-logo-draw-path {
-  fill: none; 
+  fill: none;
   fill-opacity: 0;
   stroke: #3b82f6;
   stroke-width: 1;
   stroke-dasharray: 1000;
   stroke-dashoffset: 1000;
   transform-origin: center;
-  animation: 
-    rizton-draw 2s ease-in-out forwards,
+  animation: rizton-draw 2s ease-in-out forwards,
     rizton-fillAndScale 0.5s ease-in-out 2s forwards;
 }
 
@@ -308,7 +307,7 @@
 @keyframes rizton-fillAndScale {
   to {
     fill-opacity: 1;
-    fill: #1E57DF;
+    fill: #1e57df;
     transform: scale(1.05);
   }
 }
