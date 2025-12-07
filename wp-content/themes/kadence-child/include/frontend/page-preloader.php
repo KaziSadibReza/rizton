@@ -168,13 +168,12 @@ jQuery(document).ready(function($) {
     // Track loaded assets
     let assetsLoaded = {
         dom: false,
-        images: false,
         scripts: false
     };
 
     // Check if all assets are loaded
     function checkAllLoaded() {
-        if (assetsLoaded.dom && assetsLoaded.images && assetsLoaded.scripts) {
+        if (assetsLoaded.dom && assetsLoaded.scripts) {
             hidePreloader();
         }
     }
@@ -209,43 +208,7 @@ jQuery(document).ready(function($) {
     // All resources (images, scripts, etc.) are loaded
     $(window).on('load', function() {
         assetsLoaded.scripts = true;
-
-        // Check for images
-        const images = document.querySelectorAll('img');
-        let imagesToLoad = images.length;
-
-        if (imagesToLoad === 0) {
-            assetsLoaded.images = true;
-            checkAllLoaded();
-        } else {
-            let loadedImages = 0;
-            images.forEach(img => {
-                if (img.complete) {
-                    loadedImages++;
-                } else {
-                    img.addEventListener('load', function() {
-                        loadedImages++;
-                        if (loadedImages === imagesToLoad) {
-                            assetsLoaded.images = true;
-                            checkAllLoaded();
-                        }
-                    });
-                    img.addEventListener('error', function() {
-                        loadedImages++;
-                        if (loadedImages === imagesToLoad) {
-                            assetsLoaded.images = true;
-                            checkAllLoaded();
-                        }
-                    });
-                }
-            });
-
-            // If all images were already loaded
-            if (loadedImages === imagesToLoad) {
-                assetsLoaded.images = true;
-                checkAllLoaded();
-            }
-        }
+        checkAllLoaded();
     });
 
     // Fallback: Force hide preloader after 10 seconds
