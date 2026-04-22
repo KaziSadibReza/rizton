@@ -39,7 +39,7 @@ class Rizton_Page_Preloader {
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: opacity 0.75s ease-in-out, visibility 0.75s ease-in-out;
+    transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
     opacity: 1;
     visibility: visible;
 }
@@ -72,8 +72,8 @@ class Rizton_Page_Preloader {
     stroke-dashoffset: 1000;
     transform-origin: center;
     animation:
-        rizton-draw 2s ease-in-out forwards,
-        rizton-fillAndScale 0.5s ease-in-out 2s forwards;
+        rizton-draw 0.35s ease-out forwards,
+        rizton-fillAndScale 0.15s ease-out 0.35s forwards;
 }
 
 @keyframes rizton-draw {
@@ -102,7 +102,7 @@ body.rizton-loading #content,
 body.rizton-loading .elementor-section {
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+    transition: opacity 0.2s ease-out, visibility 0.2s ease-out;
 }
 
 body.rizton-loaded .site-main,
@@ -159,57 +159,59 @@ jQuery(document).ready(function($) {
 
     // Set up SVG path animation
     const logoPath = document.querySelector('.rizton-logo-draw-path');
+    let hasFillAnimationHandler = false;
+
     if (logoPath) {
         const length = logoPath.getTotalLength();
         logoPath.style.strokeDasharray = length;
         logoPath.style.strokeDashoffset = length;
+
+        logoPath.addEventListener('animationend', function(event) {
+            if (event.animationName === 'rizton-fillAndScale') {
+                hidePreloader();
+            }
+        }, {
+            once: true
+        });
+
+        hasFillAnimationHandler = true;
     }
 
-    // Track loaded assets
-    let assetsLoaded = {
-        dom: false,
-        scripts: false
-    };
-
-    // Check if all assets are loaded
-    function checkAllLoaded() {
-        if (assetsLoaded.dom && assetsLoaded.scripts) {
-            hidePreloader();
-        }
-    }
+    let preloaderHideScheduled = false;
 
     // Hide preloader function
     function hidePreloader() {
-        setTimeout(() => {
-            const preloader = document.getElementById('rizton-preloader');
-            const body = document.body;
+        if (preloaderHideScheduled) {
+            return;
+        }
 
-            if (preloader) {
-                preloader.classList.add('loaded');
-                body.classList.remove('rizton-loading');
-                body.classList.add('rizton-loaded');
+        preloaderHideScheduled = true;
 
-                // Remove preloader from DOM after transition
-                preloader.addEventListener('transitionend', function() {
-                    preloader.remove();
-                }, {
-                    once: true
-                });
-            }
-        }, 3000); // Minimum 3 seconds to see animation
+        const preloader = document.getElementById('rizton-preloader');
+        const body = document.body;
+
+        if (preloader) {
+            preloader.classList.add('loaded');
+            body.classList.remove('rizton-loading');
+            body.classList.add('rizton-loaded');
+
+            // Remove preloader from DOM after transition
+            preloader.addEventListener('transitionend', function() {
+                preloader.remove();
+            }, {
+                once: true
+            });
+        }
     }
 
-    // DOM is ready
-    $(document).ready(function() {
-        assetsLoaded.dom = true;
-        checkAllLoaded();
-    });
-
-    // All resources (images, scripts, etc.) are loaded
-    $(window).on('load', function() {
-        assetsLoaded.scripts = true;
-        checkAllLoaded();
-    });
+    // Hide as soon as the quick fill animation finishes; fallback ensures close.
+    if (!hasFillAnimationHandler) {
+        hidePreloader();
+    } else {
+        setTimeout(() => {
+            hidePreloader();
+        }, 800);
+    }
 
     // Fallback: Force hide preloader after 10 seconds
     setTimeout(() => {
